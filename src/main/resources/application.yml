@@ -1,0 +1,80 @@
+spring:
+  application:
+    name: quinzexInventory
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 100MB
+      max-request-size: 200MB
+      file-size-threshold: 0B
+  web:
+    resources:
+      add-mappings: true
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 0
+      idle-timeout: 30000
+      max-lifetime: 60000
+      connection-timeout: 30000
+      auto-commit: true
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        default_schema: cvedha_inventory
+  security:
+    user:
+      name: disabled
+      password: disabled
+  kafka:
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring:
+          json:
+            trusted:
+              packages: com.quinzex.dto
+            value:
+              default:
+                type: com.quinzex.dto.InventoryReserveEvent
+
+server:
+  port: 8081
+  tomcat:
+    max-http-form-post-size: 200MB
+    max-swallow-size: 200MB
+
+jwt:
+  rsa:
+    public-key: ${JWT_PUBLIC_KEY}
+
+aws:
+  accessKey: ${AWS_ACCESS_KEY_ID}
+  secretKey: ${AWS_SECRET_ACCESS_KEY}
+  region: ${AWS_REGION}
+  bucketName: ${AWS_BUCKET_NAME}
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+
+razorpay.key: ${RAZORPAY_KEY_ID}
+razorpay.secret: ${RAZORPAY_KEY_SECRET}
+razorpay.webhook.secret: ${RAZORPAY_WEBHOOK_SECRET}
+spring.mail.host: ${MAIL_HOST}
+spring.mail.port: ${MAIL_PORT}
+spring.mail.username: ${MAIL_USERNAME}
+spring.mail.password: ${MAIL_PASSWORD}
+spring.mail.properties.mail.smtp.auth: true
+spring.mail.properties.mail.smtp.starttls.enable: true
