@@ -1,5 +1,6 @@
 package com.quinzex.kafka;
 
+import com.quinzex.dto.InventoryReleaseEvent;
 import com.quinzex.dto.InventoryReserveEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -10,14 +11,15 @@ import org.springframework.stereotype.Service;
 public class InventoryProducer {
 
     private final KafkaTemplate<String, InventoryReserveEvent> kafkaTemplate;
+    private final KafkaTemplate<String, InventoryReleaseEvent> releaseKafkaTemplate;
 
     //checkout-> inventory
     public void sendReserveEvent(InventoryReserveEvent inventoryReserveEvent) {
         kafkaTemplate.send("inventoryReserveTopic",inventoryReserveEvent.getOrderId().toString(), inventoryReserveEvent);
     }
     //paymentFail / timeout -> release stock
-    public void sendReleaseEvent(InventoryReserveEvent inventoryReserveEvent) {
-        kafkaTemplate.send("inventoryReleaseTopic", inventoryReserveEvent.getOrderId().toString(),inventoryReserveEvent);
+    public void sendReleaseEvent(InventoryReleaseEvent inventoryReleaseEvent) {
+        releaseKafkaTemplate.send("inventoryReleaseTopic", inventoryReleaseEvent.getOrderId().toString(),inventoryReleaseEvent);
     }
 
     //inventory success -> order service response

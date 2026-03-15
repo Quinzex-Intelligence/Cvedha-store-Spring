@@ -1,5 +1,6 @@
 package com.quinzex.service;
 import com.quinzex.dto.InventoryItemDto;
+import com.quinzex.dto.InventoryReleaseEvent;
 import com.quinzex.dto.InventoryReserveEvent;
 import com.quinzex.dto.PaymentVerificationRequest;
 import com.quinzex.entity.OrderItems;
@@ -196,6 +197,11 @@ public boolean verifyWebhookSignature(String payload,String signature){
         if(oldOrder.getPaymentExpiryTime().isBefore(LocalDateTime.now())){
             throw new RuntimeException("Payment time expired");
         }
+    List<OrderItems> oldItems = oldOrder.getOrderItems();
+    InventoryReleaseEvent releaseEvent = new InventoryReleaseEvent();
+        releaseEvent.setOrderId(oldOrderId);
+       releaseEvent.setItems(oldItems.stream().map(i-> new InventoryItemDto(i.getBookId(),i.getQuantity())).toList());
+       inventoryProducer.sendReleaseEvent(releaseEvent);
         Orders newOrder = new Orders();
         newOrder.setUserEmail(oldOrder.getUserEmail());
         newOrder.setStatus("CREATED");

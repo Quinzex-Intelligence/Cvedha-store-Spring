@@ -1,6 +1,7 @@
 package com.quinzex.kafka;
 
 import com.quinzex.dto.InventoryItemDto;
+import com.quinzex.dto.InventoryReleaseEvent;
 import com.quinzex.dto.InventoryReserveEvent;
 import com.quinzex.entity.OrderItems;
 import com.quinzex.entity.Orders;
@@ -37,7 +38,7 @@ public class InventoryConsumer {
 
     }
     @KafkaListener(topics = "inventoryReleaseTopic",groupId = "inventory-group")
- public void handleRelease(InventoryReserveEvent event){
+ public void handleRelease(InventoryReleaseEvent event){
         List<OrderItems> orderItems = convert(event.getItems());
         inventoryService.releaseStock(orderItems);
         log.info("Releasing stock for order {}", event.getOrderId());
