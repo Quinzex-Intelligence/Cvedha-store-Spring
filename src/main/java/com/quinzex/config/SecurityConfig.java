@@ -38,7 +38,7 @@ public class SecurityConfig {
         corsConfiguration.setAllowedOrigins(List.of("http://localhost:3000","https://www.quinzexintelligence.com","https://www.d2sg5wp92ge742.cloudfront.net","https://www.quinzexintelligence.com","http://api.quinzexintelligence.com","https://backend.quinzexintelligence.com","https://api.quinzexintelligence.com"));
         corsConfiguration.setAllowedHeaders(List.of("*"));
         corsConfiguration.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
-        corsConfiguration.setAllowCredentials(true);
+        corsConfiguration.setAllowCredentials(false);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", corsConfiguration);
         return source;
