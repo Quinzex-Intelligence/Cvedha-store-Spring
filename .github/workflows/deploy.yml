@@ -9,7 +9,6 @@ env:
   AWS_REGION: ap-south-2
   ECR_REPO: estore
   IMAGE_TAG: latest
-  CONTAINER_NAME: estore-api
 
 jobs:
   build-and-deploy:
@@ -35,7 +34,7 @@ jobs:
       - name: Login to ECR
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Set ECR Image URI
+      - name: Set Image URI
         run: |
           echo "IMAGE_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPO }}:${{ env.IMAGE_TAG }}" >> $GITHUB_ENV
 
@@ -54,8 +53,9 @@ jobs:
             --comment "Deploy estore service" \
             --parameters commands="
               aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com,
+              cd /home/ec2-user/estore,
+              docker-compose down || true,
               docker pull $IMAGE_URI,
-              docker stop $CONTAINER_NAME || true,
-              docker rm $CONTAINER_NAME || true,
-              docker-compose run -d --name $CONTAINER_NAME -p 8081:8081 $IMAGE_URI
+              docker-compose up -d --force-recreate,
+              docker ps -a
             "
