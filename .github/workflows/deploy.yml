@@ -5,64 +5,51 @@ on:
     branches:
       - main
 
+env:
+  AWS_REGION: ap-south-2
+  ECR_REPO: estore
+  IMAGE_TAG: latest
+  CONTAINER_NAME: estore-api
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-south-2
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to ECR
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Set ECR Image URI
+        run: |
+          echo "IMAGE_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPO }}:${{ env.IMAGE_TAG }}" >> $GITHUB_ENV
 
-      - name: Build and Push Image (NO CACHE)
+      - name: Build and Push Image
         run: |
           docker buildx build \
-            --no-cache \
-            --pull \
             --platform linux/arm64 \
-            -t 264426277863.dkr.ecr.ap-south-2.amazonaws.com/estore:latest \
+            -t $IMAGE_URI \
             --push .
 
-      - name: Deploy to EC2 (Hardcoded Image)
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            set -e
-
-            # Login to ECR
-            aws ecr get-login-password --region ap-south-2 \
-            | docker login --username AWS --password-stdin 264426277863.dkr.ecr.ap-south-2.amazonaws.com
-
-            cd /home/ec2-user/estore/
-
-            # Stop container
-            docker-compose down --remove-orphans || true
-            docker rm -f estore-api || true
-
-            # Remove old image completely
-            docker rmi 264426277863.dkr.ecr.ap-south-2.amazonaws.com/estore:latest || true
-
-            # Pull fresh image explicitly
-            docker pull 264426277863.dkr.ecr.ap-south-2.amazonaws.com/estore:latest
-
-            # Recreate container
-            docker-compose up -d --force-recreate
-
-            # Show running image
-            docker ps
-            docker images | grep estore
+      - name: Deploy via SSM
+        run: |
+          aws ssm send-command \
+            --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
+            --document-name "AWS-RunShellScript" \
+            --comment "Deploy estore service" \
+            --parameters commands="
+              aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com,
+              docker pull $IMAGE_URI,
+              docker stop $CONTAINER_NAME || true,
+              docker rm $CONTAINER_NAME || true,
+              docker run -d --name $CONTAINER_NAME -p 80:8080 $IMAGE_URI
+            "
