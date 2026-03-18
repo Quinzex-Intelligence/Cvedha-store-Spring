@@ -57,5 +57,5 @@ jobs:
               docker pull $IMAGE_URI,
               docker stop $CONTAINER_NAME || true,
               docker rm $CONTAINER_NAME || true,
-              docker run -d --name $CONTAINER_NAME -p 80:8080 $IMAGE_URI
+              docker-compose run -d --name $CONTAINER_NAME -p 8081:8081 $IMAGE_URI
             "
