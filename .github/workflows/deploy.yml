@@ -48,7 +48,7 @@ jobs:
             aws ecr get-login-password --region ap-south-2 \
             | docker login --username AWS --password-stdin 264426277863.dkr.ecr.ap-south-2.amazonaws.com
 
-            cd /home/ec2-user/spring/
+            cd /home/ec2-user/estore/
 
             # Stop container
             docker-compose down --remove-orphans || true
