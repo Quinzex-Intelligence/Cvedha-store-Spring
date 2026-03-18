@@ -52,7 +52,7 @@ jobs:
 
             # Stop container
             docker-compose down --remove-orphans || true
-            docker rm -f spring-api || true
+            docker rm -f estore-api || true
 
             # Remove old image completely
             docker rmi 264426277863.dkr.ecr.ap-south-2.amazonaws.com/estore:latest || true
