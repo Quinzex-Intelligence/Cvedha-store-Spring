@@ -2,10 +2,12 @@ package com.quinzex.controller;
 
 import com.quinzex.dto.BulkCreateEbookRequest;
 import com.quinzex.dto.CreateEbookRequest;
+import com.quinzex.dto.EbookAdminResponse;
 import com.quinzex.entity.Ebooks;
 import com.quinzex.service.IEbookAdminService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -17,6 +19,17 @@ import java.util.List;
 public class EbookAdminController {
 
     private final IEbookAdminService ebookAdminService;
+
+
+    @GetMapping("/active")
+    @PreAuthorize("hasAuthority('VIEW_BOOKS') or hasRole('SUPER_ADMIN')")
+    public ResponseEntity<List<EbookAdminResponse>> getActiveBooks(
+            @RequestParam(required = false) Long cursor) {
+
+        return ResponseEntity.ok(
+                ebookAdminService.getActiveEbooks(cursor)
+        );
+    }
 
     @GetMapping("/inactive")
     public ResponseEntity<List<Ebooks>> getInactiveBooks(

@@ -1,6 +1,7 @@
 package com.quinzex.service;
 
 import com.quinzex.dto.CreateEbookRequest;
+import com.quinzex.dto.EbookAdminResponse;
 import com.quinzex.entity.Ebooks;
 
 import java.io.IOException;
@@ -15,7 +16,7 @@ public interface IEbookAdminService {
 
     public String activateEbooks(List<Long> ids);
 
-
+    List<EbookAdminResponse> getActiveEbooks(Long cursor);
 
     String editBook(Long id, CreateEbookRequest editEbookRequest) throws IOException;
 }

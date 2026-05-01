@@ -1,5 +1,6 @@
 package com.quinzex.service;
 import com.quinzex.dto.CreateEbookRequest;
+import com.quinzex.dto.EbookAdminResponse;
 import com.quinzex.entity.Ebooks;
 import com.quinzex.repository.EbookRepo;
 import lombok.RequiredArgsConstructor;
@@ -133,5 +134,41 @@ public class EbookAdminService implements IEbookAdminService {
      return "edited successfully";
     }
 
+    @Override
+    @PreAuthorize("hasAuthority('VIEW_BOOKS') or hasRole('SUPER_ADMIN')")
+    public List<EbookAdminResponse> getActiveEbooks(Long cursor){
+        List<Ebooks> ebooks;
+        if(cursor == null){
+            ebooks=ebookRepo.findTop10ByActiveTrueOrderByBookIdAsc();
+        }else{
+            ebooks=ebookRepo.findTop10ByActiveTrueAndBookIdGreaterThanOrderByBookIdAsc(cursor);
+        }
+        return ebooks.stream().map(this::convertToEbookAdminResponse).toList();
+    }
 
+private EbookAdminResponse convertToEbookAdminResponse(Ebooks ebook) {
+        String coverPhotoUrl = null;
+        String pdfUrl = null;
+
+        if(ebook.getCoverPhoto()!= null){
+            coverPhotoUrl =s3Service.generatePresignedUrl( ebook.getCoverPhoto());
+        }
+        if(ebook.getEbookPdfKey() != null){
+            pdfUrl = s3Service.generatePresignedUrl( ebook.getEbookPdfKey());
+        }
+        return EbookAdminResponse.builder().bookId(ebook.getBookId())
+                .bookName(ebook.getBookName())
+                .bookAuthor(ebook.getBookAuthor())
+                .bookDescription(ebook.getBookDescription())
+                .bookPrice(ebook.getBookPrice())
+                .bookPublishDate(ebook.getBookPublishDate())
+                .coverPhotoUrl(coverPhotoUrl)
+                .pdfUrl(pdfUrl)
+                .bookCategory(ebook.getBookCategory())
+                .languageCategory(ebook.getLanguageCategory())
+                .totalQuantity(ebook.getTotalQuantity())
+                .availableQuantity(ebook.getAvailableQuantity())
+                .reservedQuantity(ebook.getReservedQuantity())
+                .active(Boolean.TRUE.equals(ebook.getActive())).build();
+}
 }
